@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import reactLogo from './assets/react.svg'
 import viteLogo from '/vite.svg'
+import JapaneseFormValidation from './components/Japaneseformvalidation'
+import JapaneseFormExample from './components/Dynamicformexample'
 
 function App() {
   const [count, setCount] = useState(0)
@@ -27,6 +29,10 @@ function App() {
       <p className="read-the-docs">
         Click on the Vite and React logos to learn more
       </p>
+      <div className="w-full p-16 bg-red-200">
+        <JapaneseFormValidation />
+        <JapaneseFormExample />
+      </div>
     </>
   )
 }

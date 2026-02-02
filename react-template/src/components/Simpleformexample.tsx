@@ -1,274 +1,615 @@
-// SimpleFormExample.tsx - 再利用可能コンポーネントを使った簡単な例
+// FormComponents.tsx - 再利用可能なフォームコンポーネント集
 
 import React from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import {
-  TextInput,
-  PostalCodeInput,
-  PrefectureSelect,
-  PhoneInput,
-  RadioGroup,
-  CheckboxGroup,
-  TextArea,
-  Checkbox,
-  PasswordInput,
-  SubmitButton,
-  FormSection,
-} from './Formcomponents';
-import { usePostalCodeLookup } from '../ts/Validationutils';
+import { type UseFormRegister, type FieldError, type FieldErrorsImpl, type Merge } from 'react-hook-form';
 
-// スキーマ定義
-const simpleFormSchema = z.object({
-  lastName: z.string().min(1, '姓を入力してください'),
-  firstName: z.string().min(1, '名を入力してください'),
-  email: z.string().email('メールアドレスの形式が正しくありません'),
-  password: z.string()
-    .min(8, 'パスワードは8文字以上で入力してください')
-    .regex(/[A-Z]/, '大文字を含めてください')
-    .regex(/[a-z]/, '小文字を含めてください')
-    .regex(/[0-9]/, '数字を含めてください'),
-  postalCode: z.string().regex(/^\d{3}-\d{4}$/, '郵便番号は000-0000形式で入力してください'),
-  prefecture: z.string().min(1, '都道府県を選択してください'),
-  city: z.string().min(1, '市区町村を入力してください'),
-  address1: z.string().min(1, '町名・番地を入力してください'),
-  mobile: z.string().regex(/^0[789]0\d{8}$/, '携帯電話番号の形式が正しくありません'),
-  gender: z.enum(['male', 'female', 'other'], {
-    errorMap: () => ({ message: '性別を選択してください' })
-  }),
-  interests: z.array(z.string()).min(1, '少なくとも1つ選択してください'),
-  message: z.string().max(500, 'メッセージは500文字以内で入力してください').optional().or(z.literal('')),
-  agreeToTerms: z.boolean().refine(val => val === true, '利用規約に同意してください'),
-});
+/**
+ * ========================================
+ * 共通Props型定義
+ * ========================================
+ */
 
-type FormData = z.infer<typeof simpleFormSchema>;
+// フォームエラーの型（配列フィールドにも対応）
+export type FormErrorType = FieldError | Merge<FieldError, FieldErrorsImpl<any>> | undefined;
 
-const SimpleFormExample: React.FC = () => {
-  const {
-    register,
-    handleSubmit,
-    formState: { errors, isSubmitting },
-    setValue,
-    watch,
-  } = useForm<FormData>({
-    resolver: zodResolver(simpleFormSchema),
-  });
+// エラーメッセージを取得するヘルパー関数
+export const getErrorMessage = (error: FormErrorType): string | undefined => {
+  if (!error) return undefined;
+  if ('message' in error && typeof error.message === 'string') {
+    return error.message;
+  }
+  if ('root' in error && error.root && 'message' in error.root) {
+    return error.root.message as string;
+  }
+  return undefined;
+};
 
-  // 郵便番号検索
-  const { lookup, loading: isSearching } = usePostalCodeLookup();
-  const postalCode = watch('postalCode');
+interface BaseInputProps {
+  label: string;
+  name: string;
+  error?: FormErrorType;
+  required?: boolean;
+  placeholder?: string;
+  helpText?: string;
+}
 
-  const handlePostalCodeSearch = async () => {
-    const result = await lookup(postalCode);
-    if (result) {
-      setValue('prefecture', result.prefecture);
-      setValue('city', result.city);
-      setValue('address1', result.town || '');
-    }
-  };
+/**
+ * ========================================
+ * テキスト入力コンポーネント
+ * ========================================
+ */
 
-  const onSubmit = async (data: FormData) => {
-    console.log('送信データ:', data);
-    // ここでAPIにデータを送信
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    alert('送信完了しました！');
-  };
+interface TextInputProps extends BaseInputProps {
+  register: UseFormRegister<any>;
+  type?: 'text' | 'email' | 'password' | 'tel' | 'url' | 'date';
+  maxLength?: number;
+}
 
-  // ラジオボタンのオプション
-  const genderOptions = [
-    { value: 'male', label: '男性' },
-    { value: 'female', label: '女性' },
-    { value: 'other', label: 'その他' },
-  ];
-
-  // チェックボックスのオプション
-  const interestOptions = [
-    { value: 'tech', label: 'IT・テクノロジー' },
-    { value: 'business', label: 'ビジネス' },
-    { value: 'finance', label: '金融' },
-    { value: 'health', label: '医療・健康' },
-    { value: 'education', label: '教育' },
-    { value: 'entertainment', label: 'エンターテインメント' },
-  ];
-
+export const TextInput: React.FC<TextInputProps> = ({
+  label,
+  name,
+  register,
+  error,
+  required = false,
+  type = 'text',
+  placeholder,
+  helpText,
+  maxLength,
+}) => {
+  // error recive
+  const errorMessage = getErrorMessage(error);
   return (
-    <div className="min-h-screen bg-gray-50 py-12 px-4">
-      <div className="max-w-3xl mx-auto">
-        <div className="bg-white shadow-lg rounded-lg p-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-8 text-center">
-            会員登録フォーム
-          </h1>
-
-          <form onSubmit={handleSubmit(onSubmit)}>
-            {/* 基本情報セクション */}
-            <FormSection title="基本情報">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <TextInput
-                  label="姓"
-                  name="lastName"
-                  register={register}
-                  error={errors.lastName}
-                  required
-                  placeholder="山田"
-                />
-                
-                <TextInput
-                  label="名"
-                  name="firstName"
-                  register={register}
-                  error={errors.firstName}
-                  required
-                  placeholder="太郎"
-                />
-              </div>
-
-              <TextInput
-                label="メールアドレス"
-                name="email"
-                register={register}
-                error={errors.email}
-                required
-                type="email"
-                placeholder="example@example.com"
-              />
-
-              <PasswordInput
-                label="パスワード"
-                name="password"
-                register={register}
-                error={errors.password}
-                required
-                showStrength
-                helpText="大文字・小文字・数字を含む8文字以上"
-              />
-
-              <RadioGroup
-                label="性別"
-                name="gender"
-                register={register}
-                error={errors.gender}
-                required
-                options={genderOptions}
-              />
-            </FormSection>
-
-            {/* 住所情報セクション */}
-            <FormSection title="住所情報">
-              <PostalCodeInput
-                label="郵便番号1"
-                name="postalCode"
-                register={register}
-                error={errors.postalCode}
-                required
-                onSearch={handlePostalCodeSearch}
-                isSearching={isSearching}
-              />
-
-              <PrefectureSelect
-                label="郵便番号2"
-                name="prefecture"
-                register={register}
-                error={errors.prefecture}
-                required
-              />
-
-              <TextInput
-                label="市区町村"
-                name="city"
-                register={register}
-                error={errors.city}
-                required
-                placeholder="千代田区"
-              />
-
-              <TextInput
-                label="町名・番地"
-                name="address1"
-                register={register}
-                error={errors.address1}
-                required
-                placeholder="丸の内1-1-1"
-              />
-            </FormSection>
-
-            {/* 連絡先情報セクション */}
-            <FormSection title="連絡先情報">
-              <PhoneInput
-                label="携帯電話番号"
-                name="mobile"
-                register={register}
-                error={errors.mobile}
-                required
-                type="mobile"
-              />
-            </FormSection>
-
-            {/* その他の情報セクション */}
-            <FormSection title="その他の情報">
-              <CheckboxGroup
-                label="興味のある分野"
-                name="interests"
-                register={register}
-                error={errors.interests}
-                required
-                options={interestOptions}
-                columns={2}
-                helpText="最大5つまで選択可能"
-              />
-
-              <TextArea
-                label="メッセージ"
-                name="message"
-                register={register}
-                error={errors.message}
-                rows={4}
-                placeholder="ご自由にご記入ください"
-                helpText="500文字以内"
-                maxLength={500}
-              />
-            </FormSection>
-
-            {/* 同意事項 */}
-            <FormSection title="同意事項">
-              <Checkbox
-                label="利用規約に同意します"
-                name="agreeToTerms"
-                register={register}
-                error={errors.agreeToTerms}
-                required
-              />
-            </FormSection>
-
-            {/* 送信ボタン */}
-            <div className="flex justify-center mt-8">
-              <SubmitButton
-                text="登録する"
-                loadingText="送信中..."
-                isSubmitting={isSubmitting}
-              />
-            </div>
-          </form>
-        </div>
-
-        {/* 使い方説明 */}
-        <div className="mt-8 bg-white shadow-lg rounded-lg p-6">
-          <h3 className="text-lg font-semibold text-gray-800 mb-3">
-            💡 このフォームの特徴
-          </h3>
-          <ul className="space-y-2 text-sm text-gray-600">
-            <li>✅ 再利用可能なコンポーネントで構築</li>
-            <li>✅ Zodによる型安全な校験</li>
-            <li>✅ 郵便番号から住所を自動入力</li>
-            <li>✅ パスワード強度のリアルタイム表示</li>
-            <li>✅ エラーメッセージの日本語化</li>
-            <li>✅ レスポンシブデザイン対応</li>
-            <li>✅ アクセシビリティ対応</li>
-          </ul>
-        </div>
-      </div>
+    <div className="mb-4">
+      <label className="block text-sm font-medium text-gray-700 mb-1">
+        {label} {required && <span className="text-red-500">*</span>}
+      </label>
+      <input
+        {...register(name)}
+        type={type}
+        maxLength={maxLength}
+        className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition ${error ? 'border-red-500' : 'border-gray-300'
+          }`}
+        placeholder={placeholder}
+      />
+      {helpText && !error && (
+        <p className="mt-1 text-xs text-gray-500">{helpText}</p>
+      )}
+      {errorMessage && (
+        <p className="mt-1 text-sm text-red-500">{errorMessage}</p>
+      )}
     </div>
   );
 };
 
-export default SimpleFormExample;
+/**
+ * ========================================
+ * 郵便番号入力コンポーネント（検索ボタン付き）
+ * ========================================
+ */
+
+interface PostalCodeInputProps extends BaseInputProps {
+  register: UseFormRegister<any>;
+  onSearch: () => void;
+  isSearching?: boolean;
+}
+
+export const PostalCodeInput: React.FC<PostalCodeInputProps> = ({
+  label,
+  name,
+  register,
+  error,
+  required = false,
+  onSearch,
+  isSearching = false,
+}) => {
+  const errorMessage = getErrorMessage(error);
+  return (
+    <div className="mb-4">
+      <label className="block text-sm font-medium text-gray-700 mb-1">
+        {label} {required && <span className="text-red-500">*</span>}
+      </label>
+      <div className="flex gap-2">
+        <input
+          {...register(name)}
+          type="text"
+          maxLength={8}
+          className={`flex-1 px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${error ? 'border-red-500' : 'border-gray-300'
+            }`}
+          placeholder="123-4567"
+        />
+        <button
+          type="button"
+          onClick={onSearch}
+          disabled={isSearching}
+          className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition disabled:opacity-50"
+        >
+          {isSearching ? '検索中...' : '住所検索'}
+        </button>
+      </div>
+      <p className="mt-1 text-xs text-gray-500">
+        ハイフン付きで入力してください（例：123-4567）
+      </p>
+      {errorMessage && (
+        <p className="mt-1 text-sm text-red-500">{errorMessage}</p>
+      )}
+    </div>
+  );
+};
+
+/**
+ * ========================================
+ * 電話番号入力コンポーネント
+ * ========================================
+ */
+
+interface PhoneInputProps extends BaseInputProps {
+  register: UseFormRegister<any>;
+  type: 'tel' | 'mobile';
+}
+
+export const PhoneInput: React.FC<PhoneInputProps> = ({
+  label,
+  name,
+  register,
+  error,
+  required = false,
+  type,
+}) => {
+  const errorMessage = getErrorMessage(error);
+  const placeholder = type === 'mobile' ? '09012345678' : '0312345678';
+  const maxLength = type === 'mobile' ? 11 : 11;
+
+  return (
+    <div className="mb-4">
+      <label className="block text-sm font-medium text-gray-700 mb-1">
+        {label} {required && <span className="text-red-500">*</span>}
+      </label>
+      <input
+        {...register(name)}
+        type="tel"
+        maxLength={maxLength}
+        className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${error ? 'border-red-500' : 'border-gray-300'
+          }`}
+        placeholder={placeholder}
+      />
+      <p className="mt-1 text-xs text-gray-500">
+        ハイフンなしで入力してください
+      </p>
+      {errorMessage && (
+        <p className="mt-1 text-sm text-red-500">{errorMessage}</p>
+      )}
+    </div>
+  );
+};
+
+/**
+ * ========================================
+ * セレクトボックスコンポーネント
+ * ========================================
+ */
+
+interface SelectOption {
+  value: string;
+  label: string;
+}
+
+interface SelectInputProps extends BaseInputProps {
+  register: UseFormRegister<any>;
+  options: SelectOption[];
+  defaultOption?: string;
+}
+
+export const SelectInput: React.FC<SelectInputProps> = ({
+  label,
+  name,
+  register,
+  error,
+  required = false,
+  options,
+  defaultOption = '選択してください',
+}) => {
+  const errorMessage = getErrorMessage(error);
+  return (
+    <div className="mb-4">
+      <label className="block text-sm font-medium text-gray-700 mb-1">
+        {label} {required && <span className="text-red-500">*</span>}
+      </label>
+      <select
+        {...register(name)}
+        className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${error ? 'border-red-500' : 'border-gray-300'
+          }`}
+      >
+        <option value="">{defaultOption}</option>
+        {options.map((option) => (
+          <option key={option.value} value={option.value}>
+            {option.label}
+          </option>
+        ))}
+      </select>
+      {errorMessage && (
+        <p className="mt-1 text-sm text-red-500">{errorMessage}</p>
+      )}
+    </div>
+  );
+};
+
+/**
+ * ========================================
+ * 都道府県セレクトコンポーネント
+ * ========================================
+ */
+
+interface PrefectureSelectProps extends Omit<BaseInputProps, 'placeholder'> {
+  register: UseFormRegister<any>;
+}
+
+const PREFECTURES = [
+  '北海道', '青森県', '岩手県', '宮城県', '秋田県', '山形県', '福島県',
+  '茨城県', '栃木県', '群馬県', '埼玉県', '千葉県', '東京都', '神奈川県',
+  '新潟県', '富山県', '石川県', '福井県', '山梨県', '長野県', '岐阜県',
+  '静岡県', '愛知県', '三重県', '滋賀県', '京都府', '大阪府', '兵庫県',
+  '奈良県', '和歌山県', '鳥取県', '島根県', '岡山県', '広島県', '山口県',
+  '徳島県', '香川県', '愛媛県', '高知県', '福岡県', '佐賀県', '長崎県',
+  '熊本県', '大分県', '宮崎県', '鹿児島県', '沖縄県'
+];
+
+export const PrefectureSelect: React.FC<PrefectureSelectProps> = ({
+  label = '都道府県',
+  name,
+  register,
+  error,
+  required = false,
+}) => {
+  const options = PREFECTURES.map(pref => ({ value: pref, label: pref }));
+
+  return (
+    <SelectInput
+      label={label}
+      name={name}
+      register={register}
+      error={error}
+      required={required}
+      options={options}
+    />
+  );
+};
+
+/**
+ * ========================================
+ * ラジオボタングループコンポーネント
+ * ========================================
+ */
+
+interface RadioOption {
+  value: string;
+  label: string;
+}
+
+interface RadioGroupProps extends Omit<BaseInputProps, 'placeholder'> {
+  register: UseFormRegister<any>;
+  options: RadioOption[];
+  inline?: boolean;
+}
+
+export const RadioGroup: React.FC<RadioGroupProps> = ({
+  label,
+  name,
+  register,
+  error,
+  required = false,
+  options,
+  inline = true,
+}) => {
+  const errorMessage = getErrorMessage(error);
+  return (
+
+    <div className="mb-4">
+      <label className="block text-sm font-medium text-gray-700 mb-2">
+        {label} {required && <span className="text-red-500">*</span>}
+      </label>
+      <div className={inline ? 'flex gap-6' : 'space-y-2'}>
+        {options.map((option) => (
+          <label key={option.value} className="inline-flex items-center">
+            <input
+              {...register(name)}
+              type="radio"
+              value={option.value}
+              className="w-4 h-4 text-blue-600 focus:ring-2 focus:ring-blue-500"
+            />
+            <span className="ml-2">{option.label}</span>
+          </label>
+        ))}
+      </div>
+      {errorMessage && (
+        <p className="mt-1 text-sm text-red-500">{errorMessage}</p>
+      )}
+    </div>
+  );
+};
+
+/**
+ * ========================================
+ * チェックボックスグループコンポーネント
+ * ========================================
+ */
+
+interface CheckboxOption {
+  value: string;
+  label: string;
+}
+
+interface CheckboxGroupProps {
+  label: string;
+  name: string;
+  register: UseFormRegister<any>;
+  error?: FormErrorType;
+  required?: boolean;
+  helpText?: string;
+  options: CheckboxOption[];
+  columns?: number;
+}
+
+export const CheckboxGroup: React.FC<CheckboxGroupProps> = ({
+  label,
+  name,
+  register,
+  error,
+  required = false,
+  options,
+  helpText,
+  columns = 2,
+}) => {
+  const errorMessage = getErrorMessage(error);
+
+  return (
+    <div className="mb-4">
+      <label className="block text-sm font-medium text-gray-700 mb-2">
+        {label} {required && <span className="text-red-500">*</span>}
+      </label>
+      <div className={`grid grid-cols-${columns} gap-2`}>
+        {options.map((option) => (
+          <label key={option.value} className="inline-flex items-center">
+            <input
+              {...register(name)}
+              type="checkbox"
+              value={option.value}
+              className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
+            />
+            <span className="ml-2 text-sm">{option.label}</span>
+          </label>
+        ))}
+      </div>
+      {helpText && !error && (
+        <p className="mt-1 text-xs text-gray-500">{helpText}</p>
+      )}
+      {errorMessage && (
+        <p className="mt-1 text-sm text-red-500">{errorMessage}</p>
+      )}
+    </div>
+  );
+};
+
+/**
+ * ========================================
+ * テキストエリアコンポーネント
+ * ========================================
+ */
+
+interface TextAreaProps extends BaseInputProps {
+  register: UseFormRegister<any>;
+  rows?: number;
+  maxLength?: number;
+}
+
+export const TextArea: React.FC<TextAreaProps> = ({
+  label,
+  name,
+  register,
+  error,
+  required = false,
+  placeholder,
+  helpText,
+  rows = 4,
+  maxLength,
+}) => {
+  const errorMessage = getErrorMessage(error);
+  return (
+    <div className="mb-4">
+      <label className="block text-sm font-medium text-gray-700 mb-1">
+        {label} {required && <span className="text-red-500">*</span>}
+      </label>
+      <textarea
+        {...register(name)}
+        rows={rows}
+        maxLength={maxLength}
+        className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${error ? 'border-red-500' : 'border-gray-300'
+          }`}
+        placeholder={placeholder}
+      />
+      {helpText && !error && (
+        <p className="mt-1 text-xs text-gray-500">{helpText}</p>
+      )}
+      {errorMessage && (
+        <p className="mt-1 text-sm text-red-500">{errorMessage}</p>
+      )}
+    </div>
+  );
+};
+
+/**
+ * ========================================
+ * チェックボックス（単一）コンポーネント
+ * ========================================
+ */
+
+interface CheckboxProps extends Omit<BaseInputProps, 'placeholder'> {
+  register: UseFormRegister<any>;
+}
+
+export const Checkbox: React.FC<CheckboxProps> = ({
+  label,
+  name,
+  register,
+  error,
+  required = false,
+}) => {
+  const errorMessage = getErrorMessage(error);
+  return (
+    <div className="mb-4">
+      <label className="inline-flex items-start">
+        <input
+          {...register(name)}
+          type="checkbox"
+          className="w-4 h-4 mt-1 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
+        />
+        <span className="ml-2 text-sm">
+          {label} {required && <span className="text-red-500">*</span>}
+        </span>
+      </label>
+      {errorMessage && (
+        <p className="mt-1 text-sm text-red-500">{errorMessage}</p>
+      )}
+    </div>
+  );
+};
+
+/**
+ * ========================================
+ * パスワード入力コンポーネント（強度表示付き）
+ * ========================================
+ */
+
+import { useState } from 'react';
+import { getPasswordStrength, getPasswordStrengthLabel } from '../ts/Validationutils';
+
+interface PasswordInputProps extends BaseInputProps {
+  register: UseFormRegister<any>;
+  showStrength?: boolean;
+}
+
+export const PasswordInput: React.FC<PasswordInputProps> = ({
+  label,
+  name,
+  register,
+  error,
+  required = false,
+  showStrength = true,
+  placeholder,
+  helpText,
+}) => {
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+
+  const strength = showStrength ? getPasswordStrength(password) : 0;
+  const strengthLabel = getPasswordStrengthLabel(strength);
+
+  const strengthColors = [
+    'bg-red-500',
+    'bg-orange-500',
+    'bg-yellow-500',
+    'bg-lime-500',
+    'bg-green-500'
+  ];
+  const errorMessage = getErrorMessage(error);
+
+  return (
+    <div className="mb-4">
+      <label className="block text-sm font-medium text-gray-700 mb-1">
+        {label} {required && <span className="text-red-500">*</span>}
+      </label>
+      <div className="relative">
+        <input
+          {...register(name)}
+          type={showPassword ? 'text' : 'password'}
+          onChange={(e) => setPassword(e.target.value)}
+          className={`w-full px-4 py-2 pr-10 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${error ? 'border-red-500' : 'border-gray-300'
+            }`}
+          placeholder={placeholder}
+        />
+        <button
+          type="button"
+          onClick={() => setShowPassword(!showPassword)}
+          className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+        >
+          {showPassword ? '🙈' : '👁️'}
+        </button>
+      </div>
+
+      {showStrength && password && (
+        <div className="mt-2">
+          <div className="flex gap-1 mb-1">
+            {[0, 1, 2, 3, 4].map((level) => (
+              <div
+                key={level}
+                className={`h-1 flex-1 rounded ${level <= strength ? strengthColors[strength] : 'bg-gray-200'
+                  }`}
+              />
+            ))}
+          </div>
+          <p className="text-xs text-gray-600">
+            強度: <span className="font-medium">{strengthLabel}</span>
+          </p>
+        </div>
+      )}
+
+      {helpText && !error && (
+        <p className="mt-1 text-xs text-gray-500">{helpText}</p>
+      )}
+      {errorMessage && (
+        <p className="mt-1 text-sm text-red-500">{errorMessage}</p>
+      )}
+    </div>
+  );
+};
+
+/**
+ * ========================================
+ * 送信ボタンコンポーネント
+ * ========================================
+ */
+
+interface SubmitButtonProps {
+  text?: string;
+  loadingText?: string;
+  isSubmitting?: boolean;
+  fullWidth?: boolean;
+}
+
+export const SubmitButton: React.FC<SubmitButtonProps> = ({
+  text = '送信',
+  loadingText = '送信中...',
+  isSubmitting = false,
+  fullWidth = false,
+}) => {
+  return (
+    <button
+      type="submit"
+      disabled={isSubmitting}
+      className={`${fullWidth ? 'w-full' : 'px-8'} py-3 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition disabled:opacity-50 disabled:cursor-not-allowed`}
+    >
+      {isSubmitting ? loadingText : text}
+    </button>
+  );
+};
+
+/**
+ * ========================================
+ * フォームセクションコンポーネント
+ * ========================================
+ */
+
+interface FormSectionProps {
+  title: string;
+  children: React.ReactNode;
+}
+
+export const FormSection: React.FC<FormSectionProps> = ({ title, children }) => {
+  return (
+    <section className="mb-8">
+      <h2 className="text-xl font-semibold text-gray-800 mb-4 pb-2 border-b-2 border-blue-500">
+        {title}
+      </h2>
+      {children}
+    </section>
+  );
+};

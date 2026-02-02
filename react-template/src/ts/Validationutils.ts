@@ -70,17 +70,17 @@ export const normalizeTelNumber = (tel: string): string => {
  */
 export const formatTelNumber = (tel: string): string => {
   const cleaned = tel.replace(/-/g, '');
-  
+
   // 携帯電話（11桁）
   if (cleaned.length === 11 && /^0[789]0/.test(cleaned)) {
     return `${cleaned.slice(0, 3)}-${cleaned.slice(3, 7)}-${cleaned.slice(7)}`;
   }
-  
+
   // 固定電話（10桁）
   if (cleaned.length === 10) {
     return `${cleaned.slice(0, 3)}-${cleaned.slice(3, 6)}-${cleaned.slice(6)}`;
   }
-  
+
   return tel;
 };
 
@@ -170,11 +170,11 @@ export const calculateAge = (birthdate: Date | string): number => {
   const today = new Date();
   let age = today.getFullYear() - birth.getFullYear();
   const monthDiff = today.getMonth() - birth.getMonth();
-  
+
   if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
     age--;
   }
-  
+
   return age;
 };
 
@@ -189,12 +189,12 @@ export const warekiToSeireki = (era: string, year: number): number => {
     '平成': 1989,
     '令和': 2019,
   };
-  
+
   const baseYear = eraMap[era];
   if (!baseYear) {
     throw new Error('無効な元号です');
   }
-  
+
   return baseYear + year - 1;
 };
 
@@ -213,7 +213,7 @@ export const seirekiToWareki = (year: number): { era: string; year: number } => 
   } else if (year >= 1868) {
     return { era: '明治', year: year - 1868 + 1 };
   }
-  
+
   throw new Error('対応していない年号です');
 };
 
@@ -222,29 +222,29 @@ export const seirekiToWareki = (year: number): { era: string; year: number } => 
  */
 export const isValidCreditCard = (cardNumber: string): boolean => {
   const cleaned = cardNumber.replace(/\s|-/g, '');
-  
+
   if (!/^\d{13,19}$/.test(cleaned)) {
     return false;
   }
-  
+
   // Luhnアルゴリズム
   let sum = 0;
   let isEven = false;
-  
+
   for (let i = cleaned.length - 1; i >= 0; i--) {
     let digit = parseInt(cleaned.charAt(i), 10);
-    
+
     if (isEven) {
       digit *= 2;
       if (digit > 9) {
         digit -= 9;
       }
     }
-    
+
     sum += digit;
     isEven = !isEven;
   }
-  
+
   return sum % 10 === 0;
 };
 
@@ -253,14 +253,14 @@ export const isValidCreditCard = (cardNumber: string): boolean => {
  */
 export const getCreditCardBrand = (cardNumber: string): string | null => {
   const cleaned = cardNumber.replace(/\s|-/g, '');
-  
+
   if (/^4/.test(cleaned)) return 'Visa';
   if (/^5[1-5]/.test(cleaned)) return 'MasterCard';
   if (/^3[47]/.test(cleaned)) return 'American Express';
   if (/^35(2[89]|[3-8][0-9])/.test(cleaned)) return 'JCB';
   if (/^6(?:011|5)/.test(cleaned)) return 'Discover';
   if (/^3(?:0[0-5]|[68])/.test(cleaned)) return 'Diners Club';
-  
+
   return null;
 };
 
@@ -269,13 +269,13 @@ export const getCreditCardBrand = (cardNumber: string): string | null => {
  */
 export const getPasswordStrength = (password: string): number => {
   let strength = 0;
-  
+
   if (password.length >= 8) strength++;
   if (password.length >= 12) strength++;
   if (/[a-z]/.test(password) && /[A-Z]/.test(password)) strength++;
   if (/[0-9]/.test(password)) strength++;
   if (/[^A-Za-z0-9]/.test(password)) strength++;
-  
+
   return Math.min(strength, 4);
 };
 
@@ -301,7 +301,7 @@ export const getEmailDomain = (email: string): string | null => {
 export const isCommonJapaneseDomain = (email: string): boolean => {
   const domain = getEmailDomain(email);
   if (!domain) return false;
-  
+
   const commonDomains = [
     'gmail.com',
     'yahoo.co.jp',
@@ -314,7 +314,7 @@ export const isCommonJapaneseDomain = (email: string): boolean => {
     'hotmail.com',
     'icloud.com',
   ];
-  
+
   return commonDomains.includes(domain.toLowerCase());
 };
 
@@ -348,20 +348,20 @@ export const usePostalCodeLookup = () => {
       const response = await fetch(
         `https://zipcloud.ibsnet.co.jp/api/search?zipcode=${cleaned}`
       );
-      
+
       if (!response.ok) {
         throw new Error('住所の取得に失敗しました');
       }
 
       const data = await response.json();
-      
+
       if (data.status !== 200 || !data.results || data.results.length === 0) {
         setError('該当する住所が見つかりませんでした');
         return null;
       }
 
       const result = data.results[0];
-      
+
       return {
         prefecture: result.address1,
         city: result.address2,
