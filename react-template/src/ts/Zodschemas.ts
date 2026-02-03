@@ -33,9 +33,9 @@ export const kanaSchema = z.object({
 // 完全な氏名（漢字＋カタカナ）
 export const fullNameSchema = nameSchema.merge(kanaSchema);
 // 性別
-export const genderSchema =  z.enum(['male', 'female', 'other'], {
-    message: '性別を選択してください'
-  })
+export const genderSchema = z.enum(['male', 'female', 'other'], {
+  message: '性別を選択してください'
+})
 
 /**
  * ========================================
@@ -462,5 +462,5 @@ export const createMinAgeBirthdateSchema = (minAge: number) => {
 };
 // その他　興味
 export const interestsSchema = z.array(z.string())
-    .min(1, '少なくとも1つ選択してください')
-    .max(5, '最大5つまで選択できます')
+  .min(1, '少なくとも1つ選択してください')
+  .max(5, '最大5つまで選択できます')

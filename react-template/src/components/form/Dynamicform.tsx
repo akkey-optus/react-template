@@ -29,7 +29,7 @@ const generateSchema = (fields: FormFieldConfig[]) => {
 
                 switch (field.type) {
                         case 'email':
-                                fieldSchema = z.string().email('有効なメールアドレスを入力してください');
+                                fieldSchema = z.string().email();
                                 break;
 
                         case 'url':
@@ -48,11 +48,11 @@ const generateSchema = (fields: FormFieldConfig[]) => {
 
                         case 'checkbox':
                                 if (field.validation) {
-                                fieldSchema = field.validation; // 用你 zodSchemas.ts 里的
+                                        fieldSchema = field.validation; // 用你 zodSchemas.ts 里的
                                 } else if (field.multiple) {
-                                fieldSchema = z.array(z.string());
+                                        fieldSchema = z.array(z.string());
                                 } else {
-                                fieldSchema = z.boolean();
+                                        fieldSchema = z.boolean();
                                 }
                                 break
 
@@ -133,7 +133,9 @@ export const DynamicForm: React.FC<DynamicFormProps> = ({ config }) => {
                 watch,
         } = useForm({
                 resolver: zodResolver(schema),
-                defaultValues,
+                defaultValues: {
+                        interests: []
+                }
         });
 
         // 値が変更された時の処理
