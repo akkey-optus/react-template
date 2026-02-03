@@ -11,7 +11,7 @@ import { z } from 'zod';
 // 氏名（漢字）
 export const nameSchema = z.object({
   lastName: z.string()
-    .min(1, '姓を入力してください')
+    .min(10, '姓を入力してください')
     .max(20, '姓は20文字以内で入力してください'),
   firstName: z.string()
     .min(1, '名を入力してください')
@@ -32,6 +32,10 @@ export const kanaSchema = z.object({
 
 // 完全な氏名（漢字＋カタカナ）
 export const fullNameSchema = nameSchema.merge(kanaSchema);
+// 性別
+export const genderSchema =  z.enum(['male', 'female', 'other'], {
+    message: '性別を選択してください'
+  })
 
 /**
  * ========================================
@@ -456,3 +460,7 @@ export const createMinAgeBirthdateSchema = (minAge: number) => {
     return age >= minAge;
   }, `${minAge}歳以上である必要があります`);
 };
+// その他　興味
+export const interestsSchema = z.array(z.string())
+    .min(1, '少なくとも1つ選択してください')
+    .max(5, '最大5つまで選択できます')

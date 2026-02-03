@@ -47,12 +47,14 @@ const generateSchema = (fields: FormFieldConfig[]) => {
                                 break;
 
                         case 'checkbox':
-                                if (field.multiple) {
-                                        fieldSchema = z.array(z.string());
+                                if (field.validation) {
+                                fieldSchema = field.validation; // 用你 zodSchemas.ts 里的
+                                } else if (field.multiple) {
+                                fieldSchema = z.array(z.string());
                                 } else {
-                                        fieldSchema = z.boolean();
+                                fieldSchema = z.boolean();
                                 }
-                                break;
+                                break
 
                         case 'switch':
                                 fieldSchema = z.boolean();
