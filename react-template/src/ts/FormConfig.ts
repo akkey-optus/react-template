@@ -16,51 +16,7 @@ import {
 } from './Zodschemas';
 import { z } from 'zod';
 
-/**
- * ========================================
- * 示例1: 简单的联系表单
- * ========================================
- */
-export const contactFormConfig: FormConfig = {
-  fields: [
-    {
-      name: 'name',
-      type: 'text',
-      label: 'お名前はなんですか？',
-      placeholder: '山田太郎',
-      required: true,
-      validation: z.string().min(1, 'お名前を入力してください'),
-    },
-    {
-      name: 'email',
-      type: 'email',
-      label: 'メールアドレス',
-      placeholder: 'example@example.com',
-      required: true,
-      validation: emailSchema, // ← zodSchemas.ts から使用
-    },
-    {
-      name: 'subject',
-      type: 'text',
-      label: '件名',
-      required: true,
-    },
-    {
-      name: 'message',
-      type: 'textarea',
-      label: 'お問い合わせ内容',
-      required: true,
-      rows: 5,
-      maxLength: 500,
-    },
-  ],
-  submitText: '送信する',
-  onSubmit: async (data) => {
-    console.log('送信データ:', data);
-    // API呼び出しなど
-    alert('お問い合わせを送信しました！');
-  },
-};
+
 
 /**
  * ========================================
@@ -304,94 +260,24 @@ export const japaneseRegistrationConfig: FormConfig = {
     console.log('登録データ:', data);
     
     // API呼び出し例
-    try {
-      const response = await fetch('/api/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data),
-      });
+    // try {
+    //   const response = await fetch('/api/register', {
+    //     method: 'POST',
+    //     headers: {
+    //       'Content-Type': 'application/json',
+    //     },
+    //     body: JSON.stringify(data),
+    //   });
       
-      if (response.ok) {
-        alert('登録が完了しました！');
-      } else {
-        alert('登録に失敗しました。');
-      }
-    } catch (error) {
-      console.error('Error:', error);
-      alert('エラーが発生しました。');
-    }
+    //   if (response.ok) {
+    //     alert('登録が完了しました！');
+    //   } else {
+    //     alert('登録に失敗しました。');
+    //   }
+    // } catch (error) {
+    //   console.error('Error:', error);
+    //   alert('エラーが発生しました。');
+    // }
   },
 };
 
-/**
- * ========================================
- * 示例3: 调查问卷（从后端API获取）
- * ========================================
- */
-export const createSurveyConfig = (apiData: any): FormConfig => {
-  return {
-    fields: apiData.questions.map((question: any, index: number) => {
-      const baseConfig = {
-        name: `q${index + 1}`,
-        label: question.text,
-        required: question.required,
-      };
-
-      // 根据问题类型配置
-      switch (question.type) {
-        case 'text':
-          return {
-            ...baseConfig,
-            type: 'text' as const,
-            maxLength: 200,
-          };
-        
-        case 'textarea':
-          return {
-            ...baseConfig,
-            type: 'textarea' as const,
-            rows: 4,
-            maxLength: 500,
-          };
-        
-        case 'radio':
-          return {
-            ...baseConfig,
-            type: 'radio' as const,
-            options: question.options.map((opt: string) => ({
-              label: opt,
-              value: opt,
-            })),
-          };
-        
-        case 'checkbox':
-          return {
-            ...baseConfig,
-            type: 'checkbox' as const,
-            options: question.options.map((opt: string) => ({
-              label: opt,
-              value: opt,
-            })),
-            multiple: true,
-          };
-        
-        default:
-          return {
-            ...baseConfig,
-            type: 'text' as const,
-          };
-      }
-    }),
-    submitText: '送信',
-    onSubmit: async (data) => {
-      console.log('アンケート回答:', data);
-      await fetch('/api/survey/submit', {
-        method: 'POST',
-        body: JSON.stringify(data),
-      });
-      alert('ご回答ありがとうございました！');
-    },
-  };
-};

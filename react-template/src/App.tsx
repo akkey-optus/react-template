@@ -2,8 +2,8 @@ import { useState } from 'react'
 import reactLogo from './assets/react.svg'
 import viteLogo from '/vite.svg'
 import JapaneseFormValidation from './components/Japaneseformvalidation'
-import JapaneseFormExample from './components/Dynamicformexample'
 import FormPage from './components/form/FormPage'
+import NameFormPage from './components/NameFormPage'
 
 function App() {
   const [count, setCount] = useState(0)
@@ -32,8 +32,8 @@ function App() {
       </p>
       <div className="w-full p-16 bg-red-200">
         <JapaneseFormValidation />
-        <JapaneseFormExample />
         <FormPage />
+        <NameFormPage />
       </div>
     </>
   )

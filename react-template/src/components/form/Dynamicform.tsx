@@ -133,9 +133,7 @@ export const DynamicForm: React.FC<DynamicFormProps> = ({ config }) => {
                 watch,
         } = useForm({
                 resolver: zodResolver(schema),
-                defaultValues: {
-                        interests: []
-                }
+                defaultValues
         });
 
         // 値が変更された時の処理
@@ -157,7 +155,9 @@ export const DynamicForm: React.FC<DynamicFormProps> = ({ config }) => {
 
         // リセット処理
         const handleReset = () => {
+                console.log('フォームをリセットしました',config.fields);
                 reset(defaultValues);
+                console.log('フォームをリセットしました',config.fields);
         };
 
         // 条件付き表示のフィルタリング

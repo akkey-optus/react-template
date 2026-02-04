@@ -1,35 +1,12 @@
 // MyFormPage.tsx - 渲染页面组件
 // 这个文件导入 formConfig，并传给 DynamicForm 组件进行渲染
 
-import React, { useState, useEffect } from 'react';
+import React, { useState} from 'react';
 import { DynamicForm } from './Dynamicform';
-import { 
-  contactFormConfig, 
+import {  
   japaneseRegistrationConfig,
-  createSurveyConfig 
 } from '../../ts/FormConfig';
 
-/**
- * ========================================
- * 示例1: 联系表单页面
- * ========================================
- */
-export const ContactFormPage: React.FC = () => {
-  return (
-    <div className="min-h-screen bg-gray-50 py-12 px-4">
-      <div className="max-w-2xl mx-auto">
-        <div className="bg-white shadow-lg rounded-lg p-8">
-          <h1 className="text-2xl font-bold text-gray-900 mb-6">
-            お問い合わせフォーム
-          </h1>
-          
-          {/* 直接使用配置 */}
-          <DynamicForm config={contactFormConfig} />
-        </div>
-      </div>
-    </div>
-  );
-};
 
 /**
  * ========================================
@@ -59,73 +36,6 @@ export const RegistrationPage: React.FC = () => {
   );
 };
 
-/**
- * ========================================
- * 示例3: 调查问卷页面（从API获取配置）
- * ========================================
- */
-export const SurveyPage: React.FC = () => {
-  const [config, setConfig] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    // 从API获取问卷配置
-    const fetchSurveyData = async () => {
-      try {
-        const response = await fetch('/api/survey/123');
-        const data = await response.json();
-        
-        // 将API数据转换为表单配置
-        const formConfig = createSurveyConfig(data);
-        setConfig(formConfig);
-      } catch (err) {
-        setError('アンケートの読み込みに失敗しました');
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchSurveyData();
-  }, []);
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">読み込み中...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="bg-red-50 border border-red-200 rounded-lg p-6">
-          <p className="text-red-800">{error}</p>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="min-h-screen bg-gray-50 py-12 px-4">
-      <div className="max-w-2xl mx-auto">
-        <div className="bg-white shadow-lg rounded-lg p-8">
-          <h1 className="text-2xl font-bold text-gray-900 mb-6">
-            顧客満足度調査
-          </h1>
-          
-          {/* 使用从API获取的配置 */}
-          {config && <DynamicForm config={config} />}
-        </div>
-      </div>
-    </div>
-  );
-};
 
 /**
  * ========================================
@@ -138,13 +48,13 @@ export const App: React.FC = () => {
   const renderPage = () => {
     switch (currentPage) {
       case 'contact':
-        return <ContactFormPage />;
+        return ;
       case 'registration':
         return <RegistrationPage />;
       case 'survey':
-        return <SurveyPage />;
+        return ;
       default:
-        return <ContactFormPage />;
+        return <RegistrationPage />;
     }
   };
 
